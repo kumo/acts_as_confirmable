@@ -7,17 +7,26 @@ module Kumo
 
       module ClassMethods
         def acts_as_confirmable(*attr_names)
-          puts "inside class methods"
-          p attr_names
-          p attr_names.extract_options!
-          
           attr_names.each do |attr_name|
           class_eval <<-EOV
             include Kumo::Acts::Confirmable::InstanceMethods
-            
+
               define_method("#{attr_name.to_s}?") do
                 self.send("#{attr_name}_confirmed_at") != nil and
                   self.send("#{attr_name}_confirmed_by") != nil
+              end
+
+              # used to assign check boxes
+              define_method("#{attr_name.to_s}=") do |value|
+                if value == "0" or value == false
+                  self.send("#{attr_name}_confirmed_by=", nil)
+                  self.send("#{attr_name}_confirmed_at=", nil)
+                else
+                  if self.send("#{attr_name.to_s}?") == false
+                    self.send("#{attr_name}_confirmed_at=", Date.today)
+                    self.send("#{attr_name}_confirmer=", (User.current_user rescue 1))
+                  end
+                end
               end
 
               define_method("#{attr_name.to_s}_at") do
@@ -43,6 +52,9 @@ module Kumo
 
                 self.send("update_attribute", "#{attr_name}_confirmed_by", who)
               end
+
+              # used for check boxes
+              alias_method "#{attr_name.to_s}", "#{attr_name.to_s}?"
             EOV
           end     
         end
