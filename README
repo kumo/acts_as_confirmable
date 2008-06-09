@@ -1,7 +1,9 @@
 ActsAsConfirmable
 =================
 
-Introduction goes here.
+I wanted to use a boolean to represent whether a video had been recorded or not, but then I soon needed to know who had said that it had been recorded and when. So, the need for this plugin arose. Note, this plugin only cares about things that have been confirmed as true, e.g. it does allow someone to confirm that on a specific date a test was not done.
+
+It currently assumes that there is a Users table and it is hardwired to obtain the confirmer/user from User.current_user. If that fails it will assign the id 1 as the confirmer and unfortunately fail when the confirmer is requested.
 
 
 Example
