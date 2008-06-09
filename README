@@ -7,7 +7,45 @@ Introduction goes here.
 Example
 =======
 
-Example goes here.
+# rails confirm
+# cd confirm
+# script/generate scaffold user name:string
+# script/generate scaffold item name:string started_confirmed_by:integer started_confirmed_at:datetime finished_confirmed_by:integer finished_confirmed_at:datetime ready_confirmed_by:integer ready_confirmed_at:datetime
+
+class Item < ActiveRecord::Base
+  acts_as_confirmable :started, :finished, :ready
+end
+
+class User < ActiveRecord::Base
+  cattr_accessor :current_user
+end
+
+class ItemsController < ApplicationController
+  before_filter :load_user
+  
+  def load_user
+    User.current_user = User.find(:first)
+  end
+end
+
+items/new.html.erb
+
+<p>
+  <%= f.label :started %><br />
+  <%= f.check_box :started %> 
+</p>
+<p>
+  <%= f.label :finished %><br />
+  <%= f.check_box :finished %> 
+</p>
+<p>
+  <%= f.label :ready %><br />
+  <%= f.check_box :ready %> 
+</p>
+
+items/list.html.erb
+
+<td><%=h item.started? %> <%= item.started_confirmer.name if item.started? %></td>
 
 
 Copyright (c) 2008 Rob Clarke (kumo), released under the MIT license
