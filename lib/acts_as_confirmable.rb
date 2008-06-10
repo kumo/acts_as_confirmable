@@ -23,7 +23,11 @@ module Kumo
                   self.send("#{attr_name}_confirmed_at=", nil)
                 else
                   if self.send("#{attr_name.to_s}?") == false
-                    self.send("#{attr_name}_confirmed_at=", Date.today)
+                    if value == "1" or value == true
+                      self.send("#{attr_name}_confirmed_at=", Time.now)
+                    else
+                      self.send("#{attr_name}_confirmed_at=", (Date.parse(value).to_time rescue nil))
+                    end
                     self.send("#{attr_name}_confirmed_by=", (User.current_user.id rescue 1))
                   end
                 end
@@ -31,10 +35,6 @@ module Kumo
 
               define_method("#{attr_name.to_s}_at") do
                 self.send("#{attr_name}_confirmed_at")
-              end
-
-              define_method("#{attr_name.to_s}_at=") do
-                false
               end
 
               define_method("#{attr_name.to_s}_confirmer") do

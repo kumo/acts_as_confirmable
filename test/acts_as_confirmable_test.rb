@@ -98,7 +98,14 @@ class ConfirmableTest < Test::Unit::TestCase
   def test_assigning_as_boolean
     @mixin.recorded = true
     assert_equal(@mixin.recorded, true)
-    assert_equal(@mixin.recorded_confirmed_at, Date.today)
+    assert_equal(@mixin.recorded_confirmed_at.to_s, Time.now.to_s)
+    assert_equal(@mixin.recorded_confirmed_by, 1)
+  end
+
+  def test_assigning_as_string
+    @mixin.recorded = "2008-02-21"
+    assert_equal(@mixin.recorded, true)
+    assert_equal(@mixin.recorded_confirmed_at, Date.new(2008,2,21).to_time)
     assert_equal(@mixin.recorded_confirmed_by, 1)
   end
   
@@ -120,7 +127,7 @@ class ConfirmableTest < Test::Unit::TestCase
     @mixin.recorded = false
     @mixin.recorded = true
     assert_equal(@mixin.recorded, true)
-    assert_equal(@mixin.recorded_confirmed_at, Date.today)
+    assert_equal(@mixin.recorded_confirmed_at.to_s, Time.now.to_s)
     assert_equal(@mixin.recorded_confirmed_by, 1)
   end
   
@@ -159,13 +166,12 @@ class ConfirmableTest < Test::Unit::TestCase
   
   def test_simple_date
     @mixin.recorded_confirmed_at = Date.today
-    assert_equal(@mixin.recorded_confirmed_at, @mixin.recorded_at)
+    assert_equal(@mixin.recorded_confirmed_at, Date.today)
   end
   
   def test_no_date
     assert_equal(@mixin.recorded?, false)
   end
-  
 end
 
 class MultipleConfirmableTest < Test::Unit::TestCase
