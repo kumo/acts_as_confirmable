@@ -24,7 +24,7 @@ module Kumo
                 else
                   if self.send("#{attr_name.to_s}?") == false
                     self.send("#{attr_name}_confirmed_at=", Date.today)
-                    self.send("#{attr_name}_confirmer=", (User.current_user rescue 1))
+                    self.send("#{attr_name}_confirmed_by=", (User.current_user.id rescue 1))
                   end
                 end
               end

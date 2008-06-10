@@ -6,6 +6,19 @@ require 'active_record'
 $:.unshift File.dirname(__FILE__) + '/../lib'
 require File.dirname(__FILE__) + '/../init'
 
+class Test::Unit::TestCase
+  def assert_queries(num = 1)
+    $query_count = 0
+    yield
+  ensure
+    assert_equal num, $query_count, "#{$query_count} instead of #{num} queries were executed."
+  end
+
+  def assert_no_queries(&block)
+    assert_queries(0, &block)
+  end
+end
+
 ActiveRecord::Base.establish_connection(:adapter => "sqlite3", :dbfile => ":memory:")
 
 # AR keeps printing annoying schema statements
@@ -87,6 +100,13 @@ class ConfirmableTest < Test::Unit::TestCase
     assert_equal(@mixin.recorded, true)
     assert_equal(@mixin.recorded_confirmed_at, Date.today)
     assert_equal(@mixin.recorded_confirmed_by, 1)
+  end
+  
+  def test_no_queries
+    assert_no_queries do
+      @mixin.recorded = true
+      assert_equal(@mixin.recorded?, true)
+    end
   end
 
   def test_reassigning_as_boolean
