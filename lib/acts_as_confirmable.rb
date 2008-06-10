@@ -33,10 +33,6 @@ module Kumo
                 self.send("#{attr_name}_confirmed_at")
               end
 
-              define_method("#{attr_name.to_s}_at=") do
-                false
-              end
-
               define_method("#{attr_name.to_s}_confirmer") do
                 confirmer_id = self.send("#{attr_name}_confirmed_by")
 
