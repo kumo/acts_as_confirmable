@@ -77,51 +77,79 @@ class ConfirmableTest < Test::Unit::TestCase
     teardown_db
   end
   
-  def test_accessing_as_boolean
-    @mixin.recorded_confirmed_at = Date.today
-    @mixin.recorded_confirmed_by = 1
+  def test_checkbox_assigning
+    @mixin.recorded = "1"
     assert_equal(@mixin.recorded, true)
+    assert_equal(@mixin.recorded_confirmed_at, Date.today)
+    assert_equal(@mixin.recorded_confirmed_by, 1)
+
+    @mixin.recorded = "0"
+    assert_equal(@mixin.recorded, false)
+    assert_equal(@mixin.recorded_confirmed_at, nil)
+    assert_equal(@mixin.recorded_confirmed_by, nil)
   end
 
-  def test_accessing_as_boolean_with_no_confirmed_by
-    @mixin.recorded_confirmed_at = Date.today
-    @mixin.recorded_confirmed_by = nil
-    assert_equal(@mixin.recorded, false)
-  end
-
-  def test_accessing_as_boolean_with_no_confirmed_at
-    @mixin.recorded_confirmed_at = nil
-    @mixin.recorded_confirmed_by = 1
-    assert_equal(@mixin.recorded, false)
-  end
-  
-  def test_assigning_as_boolean
+  def test_boolean_assigning
     @mixin.recorded = true
     assert_equal(@mixin.recorded, true)
     assert_equal(@mixin.recorded_confirmed_at, Date.today)
     assert_equal(@mixin.recorded_confirmed_by, 1)
-  end
-  
-  def test_no_queries
-    assert_no_queries do
-      @mixin.recorded = true
-      assert_equal(@mixin.recorded?, true)
-    end
+
+    @mixin.recorded = false
+    assert_equal(@mixin.recorded, false)
+    assert_equal(@mixin.recorded_confirmed_at, nil)
+    assert_equal(@mixin.recorded_confirmed_by, nil)
   end
 
-  def test_reassigning_as_boolean
+  def test_accessing_as_boolean
+    @mixin.recorded_confirmed_at = Date.today
+    @mixin.recorded_confirmed_by = 1
+    assert_equal(@mixin.recorded?, true)
+    assert_equal(@mixin.recorded, true)
+  end
+
+  def test_direct_assigning_to_confirmed_at
+    @mixin.recorded_confirmed_at = Date.today
+    @mixin.recorded_confirmed_by = nil
+    assert_equal(@mixin.recorded?, false)
+    assert_equal(@mixin.recorded, false)
+  end
+
+  def test_direct_assigning_to_confirmed_by
+    @mixin.recorded_confirmed_at = nil
+    @mixin.recorded_confirmed_by = 1
+    assert_equal(@mixin.recorded?, false)
+    assert_equal(@mixin.recorded, false)
+  end
+  
+  def test_direct_assigning_to_confirmer
+    @another_user = User.create!
+    @mixin.recorded_confirmer = @another_user
+    assert_equal(@mixin.recorded, false)
+    assert_equal(@mixin.recorded_confirmed_by, @another_user.id)
+    assert_equal(@mixin.recorded_confirmer, @another_user)
+  end
+  
+  def test_no_clobbering
     @mixin.recorded_confirmed_at = Date.today - 3.days
     @mixin.recorded_confirmed_by = 2
+    assert_equal(@mixin.recorded, true)
+    
     @mixin.recorded = true
     assert_equal(@mixin.recorded, true)
     assert_equal(@mixin.recorded_confirmed_at, Date.today - 3.days)
     assert_equal(@mixin.recorded_confirmed_by, 2)
+  end
+  
+  def test_fields_cleaned
+    @mixin.recorded_confirmed_at = Date.today - 3.days
+    @mixin.recorded_confirmed_by = 2
+    assert_equal(@mixin.recorded, true)
 
     @mixin.recorded = false
-    @mixin.recorded = true
-    assert_equal(@mixin.recorded, true)
-    assert_equal(@mixin.recorded_confirmed_at, Date.today)
-    assert_equal(@mixin.recorded_confirmed_by, 1)
+    assert_equal(@mixin.recorded, false)
+    assert_equal(@mixin.recorded_confirmed_at, nil)
+    assert_equal(@mixin.recorded_confirmed_by, nil)
   end
   
   def test_confirmed_with_date_and_by
@@ -130,42 +158,22 @@ class ConfirmableTest < Test::Unit::TestCase
     assert_equal(@mixin.recorded?, true)
   end
 
-  def test_confirmed_field_for_check_box
-    @mixin.recorded_confirmed_at = Date.today
-    @mixin.recorded_confirmed_by = 1
-    assert_equal(@mixin.recorded, true)
-  end
-
-  def test_no_date_no_confirmation
-    @mixin.recorded_confirmed_by = 1
-    assert_equal(@mixin.recorded?, false)
-  end
-
-  def test_no_confirmer_no_confirmation
-    @mixin.recorded_confirmed_by = 1
-    assert_equal(@mixin.recorded?, false)
-  end
-  
   def test_load_confirmer
     @mixin.recorded_confirmed_by = 1
     assert_equal(@mixin.recorded_confirmer, @user)
   end
   
-  def test_assign_confirmer
-    @another_user = User.create!
-    @mixin.recorded_confirmer = @another_user
-    assert_equal(@mixin.recorded_confirmer, @another_user)
-  end
-  
-  def test_simple_date
+  def test_accessing_date
     @mixin.recorded_confirmed_at = Date.today
     assert_equal(@mixin.recorded_confirmed_at, @mixin.recorded_at)
   end
   
-  def test_no_date
-    assert_equal(@mixin.recorded?, false)
+  def test_performs_no_queries
+    assert_no_queries do
+      @mixin.recorded = true
+      assert_equal(@mixin.recorded?, true)
+    end
   end
-  
 end
 
 class MultipleConfirmableTest < Test::Unit::TestCase
@@ -180,40 +188,14 @@ class MultipleConfirmableTest < Test::Unit::TestCase
     teardown_db
   end
   
-  def test_confirmed_with_date_and_by
-    @mixin.recorded_confirmed_at = Date.today
-    @mixin.recorded_confirmed_by = 1
-    assert_equal(@mixin.recorded?, true)
-  end
+  def test_checkbox_assigning
+    @mixin.recorded = "1"
+    @mixin.produced = "1"
+    assert_equal(@mixin.recorded, true)
+    assert_equal(@mixin.recorded_confirmed_at, Date.today)
+    assert_equal(@mixin.recorded_confirmed_by, 1)
 
-  def test_no_date_no_confirmation
-    @mixin.recorded_confirmed_by = 1
-    assert_equal(@mixin.recorded?, false)
+    assert_equal(@mixin.produced, true)
+    assert_equal(@mixin.edited, false)
   end
-
-  def test_no_confirmer_no_confirmation
-    @mixin.recorded_confirmed_by = 1
-    assert_equal(@mixin.recorded?, false)
-  end
-  
-  def test_load_confirmer
-    @mixin.recorded_confirmed_by = 1
-    assert_equal(@mixin.recorded_confirmer, @user)
-  end
-  
-  def test_assign_confirmer
-    @another_user = User.create!
-    @mixin.recorded_confirmer = @another_user
-    assert_equal(@mixin.recorded_confirmer, @another_user)
-  end
-  
-  def test_simple_date
-    @mixin.recorded_confirmed_at = Date.today
-    assert_equal(@mixin.recorded_confirmed_at, @mixin.recorded_at)
-  end
-  
-  def test_no_date
-    assert_equal(@mixin.recorded?, false)
-  end
-  
 end
