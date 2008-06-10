@@ -1,65 +1,89 @@
 ActsAsConfirmable
 =================
 
-It is normal to use a boolean to represent whether something has been done or not, but sometimes it is useful to know who had said that it had been recorded and when they said this.
+acts_as_confirmable is useful when you want to know who ticked a check box and when they did so.
 
-This plugin treats a datetime and integer pair as a boolean. It acts like a normal boolean and so can be used in a check box and additionally if the boolean is true then the user and date are accessible too. It makes the assumption that  there is a Users table and that the currently logged in user (the one that is confirming) can be found at User.current_user. If that fails it will assign the id 1 as the confirmer, and will show the result of User.find(1) as the confirmer.
+This plugin treats a datetime attribute and an integer attribute as a boolean. This boolean can then be used as normal attribute in a check box (or in any part of the program) and when it is checked, the datetime records the moment and the integer records the id of the current user.
+
+It is assumed that there is a Users table and that the current user can be found at User.current_user. If the current user cannot be accessed then 1 is used as the id.
 
 
-Available fields
-================
+Installation
+============
 
-If a model has the attributes fields started_confirmed_at and started_confirmed_by, then the plugin provides:
+$ cd vendor/plugins
+$ git checkout git://github.com/kumo/acts_as_confirmable/tree
 
-* started? -- true if it has been confirmed by someone on a specific date
-* started -- same as above but can be used by a check box
-* started= -- the assignment method that is used by the check box when pos
-* started_confirmer -- the user that confirmed it
-* started_at -- when it was started
+
+Usage
+=====
+
+- On models where you want to be able to confirm X add a X_confirmed_at datetime and X_confirmed_by integer.
+- In the model put acts_as_confirmed :X
+- In the views add check boxes (check_box :X)
 
 
 Example
 =======
 
-# rails confirm
-# cd confirm
-# script/generate scaffold user name:string
-# script/generate scaffold item name:string started_confirmed_by:integer started_confirmed_at:datetime finished_confirmed_by:integer finished_confirmed_at:datetime ready_confirmed_by:integer ready_confirmed_at:datetime
+- create a new rails app
+$ rails confirm
+$ cd confirm
 
+- create the users table
+$ script/generate scaffold user name:string
+
+- create an items table with 3 confirmable fields
+$ script/generate scaffold item name:string started_confirmed_by:integer started_confirmed_at:datetime finished_confirmed_by:integer finished_confirmed_at:datetime ready_confirmed_by:integer ready_confirmed_at:datetime
+
+- add the plugin to the model
 class Item < ActiveRecord::Base
   acts_as_confirmable :started, :finished, :ready
 end
 
+- add 3 check boxes in items/new.html.erb and items/edit.html.erb
+<p>
+  <%= f.label :started %><br />
+  <%= f.check_box :started %>
+</p>
+<p>
+  <%= f.label :finished %><br />
+  <%= f.check_box :finished %>
+</p>
+<p>
+  <%= f.label :ready %><br />
+  <%= f.check_box :ready %>
+</p>
+
+- show the confirmation info in items/list.html.erb
+<td><%=h item.started? %> <%= item.started_confirmer.name if item.started? %></td>
+
+- example of assigning a user to current_user
 class User < ActiveRecord::Base
   cattr_accessor :current_user
 end
 
 class ItemsController < ApplicationController
   before_filter :load_user
-  
+
+  protected
+
   def load_user
     User.current_user = User.find(:first)
   end
 end
 
-items/new.html.erb
 
-<p>
-  <%= f.label :started %><br />
-  <%= f.check_box :started %> 
-</p>
-<p>
-  <%= f.label :finished %><br />
-  <%= f.check_box :finished %> 
-</p>
-<p>
-  <%= f.label :ready %><br />
-  <%= f.check_box :ready %> 
-</p>
+Available fields
+================
 
-items/list.html.erb
+If a model has the attributes started_confirmed_at and started_confirmed_by, then the plugin provides:
 
-<td><%=h item.started? %> <%= item.started_confirmer.name if item.started? %></td>
+* started? -- true if it has been confirmed by someone on a specific date
+* started -- same as above but is normally used by a check box tag
+* started= -- the assignment method that is used by the check box when posting
+* started_confirmer -- the user that confirmed it
+* started_at -- when it was confirmed
 
 
 Copyright (c) 2008 Rob Clarke (kumo), released under the MIT license
