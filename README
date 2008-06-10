@@ -1,9 +1,21 @@
 ActsAsConfirmable
 =================
 
-I wanted to use a boolean to represent whether a video had been recorded or not, but then I soon needed to know who had said that it had been recorded and when. So, the need for this plugin arose. Note, this plugin only cares about things that have been confirmed as true, e.g. it does allow someone to confirm that on a specific date a test was not done.
+It is normal to use a boolean to represent whether something has been done or not, but sometimes it is useful to know who had said that it had been recorded and when they said this.
 
-It currently assumes that there is a Users table and it is hardwired to obtain the confirmer/user from User.current_user. If that fails it will assign the id 1 as the confirmer and unfortunately fail when the confirmer is requested.
+This plugin treats a datetime and integer pair as a boolean. It acts like a normal boolean and so can be used in a check box and additionally if the boolean is true then the user and date are accessible too. It makes the assumption that  there is a Users table and that the currently logged in user (the one that is confirming) can be found at User.current_user. If that fails it will assign the id 1 as the confirmer, and will show the result of User.find(1) as the confirmer.
+
+
+Available fields
+================
+
+If a model has the attributes fields started_confirmed_at and started_confirmed_by, then the plugin provides:
+
+* started? -- true if it has been confirmed by someone on a specific date
+* started -- same as above but can be used by a check box
+* started= -- the assignment method that is used by the check box when pos
+* started_confirmer -- the user that confirmed it
+* started_at -- when it was started
 
 
 Example
