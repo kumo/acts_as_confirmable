@@ -23,7 +23,7 @@ module Kumo
                   self.send("#{attr_name}_confirmed_at=", nil)
                 else
                   if self.send("#{attr_name.to_s}?") == false
-                    self.send("#{attr_name}_confirmed_at=", Date.today)
+                    self.send("#{attr_name}_confirmed_at=", DateTime.now)
                     self.send("#{attr_name}_confirmed_by=", (User.current_user.id rescue 1))
                   end
                 end
