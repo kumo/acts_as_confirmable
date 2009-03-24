@@ -80,7 +80,7 @@ class ConfirmableTest < Test::Unit::TestCase
   def test_checkbox_assigning
     @mixin.recorded = "1"
     assert_equal(@mixin.recorded, true)
-    assert_equal(@mixin.recorded_confirmed_at, Date.today)
+    assert_in_delta(@mixin.recorded_confirmed_at, DateTime.now, 1.seconds)
     assert_equal(@mixin.recorded_confirmed_by, 1)
 
     @mixin.recorded = "0"
@@ -92,7 +92,7 @@ class ConfirmableTest < Test::Unit::TestCase
   def test_boolean_assigning
     @mixin.recorded = true
     assert_equal(@mixin.recorded, true)
-    assert_equal(@mixin.recorded_confirmed_at, Date.today)
+    assert_in_delta(@mixin.recorded_confirmed_at, DateTime.now, 1.seconds)
     assert_equal(@mixin.recorded_confirmed_by, 1)
 
     @mixin.recorded = false
@@ -102,14 +102,14 @@ class ConfirmableTest < Test::Unit::TestCase
   end
 
   def test_accessing_as_boolean
-    @mixin.recorded_confirmed_at = Date.today
+    @mixin.recorded_confirmed_at = DateTime.now
     @mixin.recorded_confirmed_by = 1
     assert_equal(@mixin.recorded?, true)
     assert_equal(@mixin.recorded, true)
   end
 
   def test_direct_assigning_to_confirmed_at
-    @mixin.recorded_confirmed_at = Date.today
+    @mixin.recorded_confirmed_at = DateTime.now
     @mixin.recorded_confirmed_by = nil
     assert_equal(@mixin.recorded?, false)
     assert_equal(@mixin.recorded, false)
@@ -131,18 +131,18 @@ class ConfirmableTest < Test::Unit::TestCase
   end
   
   def test_no_clobbering
-    @mixin.recorded_confirmed_at = Date.today - 3.days
+    @mixin.recorded_confirmed_at = DateTime.now - 3.days
     @mixin.recorded_confirmed_by = 2
     assert_equal(@mixin.recorded, true)
     
     @mixin.recorded = true
     assert_equal(@mixin.recorded, true)
-    assert_equal(@mixin.recorded_confirmed_at, Date.today - 3.days)
+    assert_equal(@mixin.recorded_confirmed_at, DateTime.now - 3.days)
     assert_equal(@mixin.recorded_confirmed_by, 2)
   end
   
   def test_fields_cleaned
-    @mixin.recorded_confirmed_at = Date.today - 3.days
+    @mixin.recorded_confirmed_at = DateTime.now - 3.days
     @mixin.recorded_confirmed_by = 2
     assert_equal(@mixin.recorded, true)
 
@@ -152,6 +152,12 @@ class ConfirmableTest < Test::Unit::TestCase
     assert_equal(@mixin.recorded_confirmed_by, nil)
   end
   
+  def test_confirmed_with_datetime_and_by
+    @mixin.recorded_confirmed_at = DateTime.now
+    @mixin.recorded_confirmed_by = 1
+    assert_equal(@mixin.recorded?, true)
+  end
+
   def test_confirmed_with_date_and_by
     @mixin.recorded_confirmed_at = Date.today
     @mixin.recorded_confirmed_by = 1
@@ -164,7 +170,7 @@ class ConfirmableTest < Test::Unit::TestCase
   end
   
   def test_accessing_date
-    @mixin.recorded_confirmed_at = Date.today
+    @mixin.recorded_confirmed_at = DateTime.now
     assert_equal(@mixin.recorded_confirmed_at, @mixin.recorded_at)
   end
   
@@ -192,7 +198,7 @@ class MultipleConfirmableTest < Test::Unit::TestCase
     @mixin.recorded = "1"
     @mixin.produced = "1"
     assert_equal(@mixin.recorded, true)
-    assert_equal(@mixin.recorded_confirmed_at, Date.today)
+    assert_in_delta(@mixin.recorded_confirmed_at, DateTime.now, 1.seconds)
     assert_equal(@mixin.recorded_confirmed_by, 1)
 
     assert_equal(@mixin.produced, true)
