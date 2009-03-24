@@ -34,6 +34,8 @@ def setup_db
       t.column :produced_confirmed_at, :date_time
       t.column :edited_confirmed_by, :integer
       t.column :edited_confirmed_at, :date_time
+      t.column :resolved_by, :integer
+      t.column :resolved_at, :date_time
     end
     
     create_table :users do |t|
@@ -59,7 +61,16 @@ class SingleConfirmableMixin < Mixin
   acts_as_confirmable :recorded
 end
 
+class SingleConfiguredConfirmableMixin < Mixin 
+  acts_as_confirmable :resolved, :suffix => nil
+end
+
 class MultipleConfirmableMixin < Mixin 
+  acts_as_confirmable :recorded, :produced, :edited
+end
+
+class MultipleMixedConfirmableMixin < Mixin 
+  acts_as_confirmable :resolved, :suffix => nil
   acts_as_confirmable :recorded, :produced, :edited
 end
 
@@ -182,6 +193,124 @@ class ConfirmableTest < Test::Unit::TestCase
   end
 end
 
+class ConfiguredConfirmableTest < Test::Unit::TestCase
+  
+  def setup
+    setup_db
+    @mixin = SingleConfiguredConfirmableMixin.new
+    @user = User.create!
+    User.current_user = @user
+  end
+
+  def teardown
+    teardown_db
+  end
+
+  def test_checkbox_assigning
+    @mixin.resolved = "1"
+    assert_equal(@mixin.resolved, true)
+    assert_in_delta(@mixin.resolved_at, DateTime.now, 1.seconds)
+    assert_equal(@mixin.resolved_by, 1)
+
+    @mixin.resolved = "0"
+    assert_equal(@mixin.resolved, false)
+    assert_equal(@mixin.resolved_at, nil)
+    assert_equal(@mixin.resolved_by, nil)
+  end
+
+  def test_boolean_assigning
+    @mixin.resolved = true
+    assert_equal(@mixin.resolved, true)
+    assert_in_delta(@mixin.resolved_at, DateTime.now, 1.seconds)
+    assert_equal(@mixin.resolved_by, 1)
+
+    @mixin.resolved = false
+    assert_equal(@mixin.resolved, false)
+    assert_equal(@mixin.resolved_at, nil)
+    assert_equal(@mixin.resolved_by, nil)
+  end
+
+  def test_accessing_as_boolean
+    @mixin.resolved_at = DateTime.now
+    @mixin.resolved_by = 1
+    assert_equal(@mixin.resolved?, true)
+    assert_equal(@mixin.resolved, true)
+  end
+
+  def test_direct_assigning_to_confirmed_at
+    @mixin.resolved_at = DateTime.now
+    @mixin.resolved_by = nil
+    assert_equal(@mixin.resolved?, false)
+    assert_equal(@mixin.resolved, false)
+  end
+
+  def test_direct_assigning_to_confirmed_by
+    @mixin.resolved_at = nil
+    @mixin.resolved_by = 1
+    assert_equal(@mixin.resolved?, false)
+    assert_equal(@mixin.resolved, false)
+  end
+  
+  def test_direct_assigning_to_confirmer
+    @another_user = User.create!
+    @mixin.resolved_confirmer = @another_user
+    assert_equal(@mixin.resolved, false)
+    assert_equal(@mixin.resolved_by, @another_user.id)
+    assert_equal(@mixin.resolved_confirmer, @another_user)
+  end
+  
+  def test_no_clobbering
+    @mixin.resolved_at = DateTime.now - 3.days
+    @mixin.resolved_by = 2
+    assert_equal(@mixin.resolved, true)
+    
+    @mixin.resolved = true
+    assert_equal(@mixin.resolved, true)
+    assert_equal(@mixin.resolved_at, DateTime.now - 3.days)
+    assert_equal(@mixin.resolved_by, 2)
+  end
+  
+  def test_fields_cleaned
+    @mixin.resolved_at = DateTime.now - 3.days
+    @mixin.resolved_by = 2
+    assert_equal(@mixin.resolved, true)
+
+    @mixin.resolved = false
+    assert_equal(@mixin.resolved, false)
+    assert_equal(@mixin.resolved_at, nil)
+    assert_equal(@mixin.resolved_by, nil)
+  end
+  
+  def test_confirmed_with_datetime_and_by
+    @mixin.resolved_at = DateTime.now
+    @mixin.resolved_by = 1
+    assert_equal(@mixin.resolved?, true)
+  end
+
+  def test_confirmed_with_date_and_by
+    @mixin.resolved_at = Date.today
+    @mixin.resolved_by = 1
+    assert_equal(@mixin.resolved?, true)
+  end
+
+  def test_load_confirmer
+    @mixin.resolved_by = 1
+    assert_equal(@mixin.resolved_confirmer, @user)
+  end
+  
+  def test_accessing_date
+    @mixin.resolved_at = DateTime.now
+    assert_equal(@mixin.resolved_at, @mixin.resolved_at)
+  end
+  
+  def test_performs_no_queries
+    assert_no_queries do
+      @mixin.resolved = true
+      assert_equal(@mixin.resolved?, true)
+    end
+  end
+end
+
 class MultipleConfirmableTest < Test::Unit::TestCase
   
   def setup
@@ -202,6 +331,39 @@ class MultipleConfirmableTest < Test::Unit::TestCase
     assert_equal(@mixin.recorded_confirmed_by, 1)
 
     assert_equal(@mixin.produced, true)
+    assert_equal(@mixin.edited, false)
+  end
+end
+
+class MultipleMixedConfirmableTest < Test::Unit::TestCase
+  
+  def setup
+    setup_db
+    @mixin = MultipleMixedConfirmableMixin.new
+    @user = User.create!
+  end
+
+  def teardown
+    teardown_db
+  end
+  
+  def test_checkbox_assigning
+    @mixin.recorded = "1"
+    @mixin.produced = "1"
+    @mixin.resolved = "1"
+    
+    assert_equal(@mixin.recorded, true)
+    assert_in_delta(@mixin.recorded_confirmed_at, DateTime.now, 1.seconds)
+    assert_equal(@mixin.recorded_confirmed_by, 1)
+
+    assert_equal(@mixin.produced, true)
+    assert_in_delta(@mixin.produced_confirmed_at, DateTime.now, 1.seconds)
+    assert_equal(@mixin.recorded_confirmed_by, 1)
+
+    assert_equal(@mixin.resolved, true)
+    assert_in_delta(@mixin.resolved_at, DateTime.now, 1.seconds)
+    assert_equal(@mixin.resolved_by, 1)
+
     assert_equal(@mixin.edited, false)
   end
 end
