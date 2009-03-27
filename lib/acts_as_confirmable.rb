@@ -34,7 +34,9 @@ module Kumo
                 else
                   if self.send("#{attr_name.to_s}?") == false
                     self.send("#{attr_name}#{suffix_string}_at=", DateTime.now)
-                    self.send("#{attr_name}#{suffix_string}_by=", (User.current_user.id rescue 1))
+                    if self.send("#{attr_name}#{suffix_string}_by") == nil
+                      self.send("#{attr_name}#{suffix_string}_by=",                     (User.current_user.id rescue 1))
+                    end
                   end
                 end
               end
@@ -52,7 +54,11 @@ module Kumo
                   who = nil
                 end
 
-                self.send("update_attribute", "#{attr_name}#{suffix_string}_by", who)
+                if self.new_record?
+                  self.send("#{attr_name}#{suffix_string}_by=", who)
+                else
+                  self.send("update_attribute", "#{attr_name}#{suffix_string}_by", who)
+                end
               end
 
               # used for check boxes

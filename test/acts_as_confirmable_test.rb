@@ -112,6 +112,19 @@ class ConfirmableTest < Test::Unit::TestCase
     assert_equal(@mixin.recorded_confirmed_by, nil)
   end
 
+  def test_pre_assigning_confirmer
+    @mixin.recorded_confirmer = 3
+    @mixin.recorded = true
+    assert_equal(@mixin.recorded, true)
+    assert_in_delta(@mixin.recorded_confirmed_at, DateTime.now, 1.seconds)
+    assert_equal(@mixin.recorded_confirmed_by, 3)
+
+    @mixin.recorded = false
+    assert_equal(@mixin.recorded, false)
+    assert_equal(@mixin.recorded_confirmed_at, nil)
+    assert_equal(@mixin.recorded_confirmed_by, nil)
+  end
+
   def test_accessing_as_boolean
     @mixin.recorded_confirmed_at = DateTime.now
     @mixin.recorded_confirmed_by = 1
